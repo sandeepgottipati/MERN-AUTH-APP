@@ -73,8 +73,8 @@ export const register = async (req, res) => {
                 res.status(201).send({ msg: "User registered successfully" });
             })
             .catch((error) => {
-                console.error(error);
-                res.status(500).send({ error: "Internal Server Error" });
+
+                res.status(500).send({ error });
             });
     } catch (error) {
         console.error(error);
@@ -130,8 +130,8 @@ export const getUser = async (req, res) => {
         if (!user) {
             return res.status(404).send({ error: "User not found" });
         }
-
-        return res.status(200).send(user);
+        const { password, ...rest } = Object.assign({}, user.toJSON());
+        return res.status(200).send(rest);
 
     }
     catch (error) {
@@ -152,7 +152,23 @@ export const getUser = async (req, res) => {
  * profile:''}
 */
 export const updateUser = async (req, res) => {
-    res.json("update user route")
+
+    try {
+        const { userId } = req.user;
+        if (userId) {
+            const body = req.body;
+            const user = await UserModel.updateOne({ _id: userId }, body).exec();
+            if (!user) {
+                return res.status(501).send({ error })
+            }
+            return res.status(201).send({ msg: "Record Updated...!" })
+        }
+        else {
+            return res.status(401).send({ error: "user Not Found..!" })
+        }
+    } catch (error) {
+        res.status(401).send({ error });
+    }
 
 }
 /** GET: http://localhost:8080/api/generateOTP */

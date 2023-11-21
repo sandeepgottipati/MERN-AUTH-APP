@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as controller from '../controller/appController.js'
+import Auth from "../middleware/auth.js";
 const router = Router();
 
 /**POST Methods */
@@ -28,7 +29,7 @@ router.get('/createResetSession', controller.createResetSession)
 
 /*PUT Methods */
 //is use to update the user profile
-router.put("/updateuser", controller.updateUser);
+router.put("/updateuser", Auth, controller.updateUser);
 //use to reset password
 router.put('/resetPassword', controller.resetPassword)
 export default router;
