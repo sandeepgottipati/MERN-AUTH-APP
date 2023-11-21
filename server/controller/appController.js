@@ -1,6 +1,8 @@
 
 import UserModel from "../model/User.model.js";
 import bcrypt from 'bcrypt'
+import jwt from "jsonwebtoken";
+import ENV from '../config.js'
 /**POST: http://localhost:5174/api/register
  * 
  * @param {
@@ -16,55 +18,6 @@ import bcrypt from 'bcrypt'
  * 
  */
 export const register = async (req, res) => {
-
-    // try {
-    //     const { userName, password, profile, email } = req.body;
-
-    //     //check the existing user.
-    //     const existUserName = new Promise((resolve, reject) => {
-    //         UserModel.findOne({ userName }, function (error, user) {
-    //             console.log(error)
-    //             if (error) reject(new Error(error));
-    //             if (user) reject({ error: "username exists" });
-    //             resolve();
-    //         })
-    //     })
-    //     //check the existing email
-    //     const existEmail = new Promise((resolve, reject) => {
-    //         UserModel.findOne({ email }, (error, email) => {
-    //             console.log(error)
-    //             if (error) reject(new Error(error));
-
-    //             if (email) reject({ error: "Email exists already" });
-    //             resolve();
-    //         })
-    //     })
-    //     Promise.all([existEmail, existUserName]).then(() => {
-
-    //         if (password) {
-    //             bcrypt.hash(password, 10).then(hashedPassword => {
-    //                 const user = new UserModel({
-    //                     userName,
-    //                     password: hashedPassword,
-    //                     profile: profile || '',
-    //                     email
-    //                 })
-    //                 user.save()
-    //                     .then(result => res.status(201).send({ msg: "user registered successfully" }))
-    //                     .catch(err => res.status(500).send({ error }));
-    //             }).catch(error => {
-    //                 return res.status(500).send({
-    //                     error: "unable to hash the password"
-    //                 })
-    //             })
-    //         }
-    //     }).catch(error => {
-    //         return res.status(500).send({ error })
-    //     })
-    // }
-    // catch (error) {
-    //     res.status(500).send(error);
-    // }
     try {
         const { userName, password, profile, email } = req.body;
 
@@ -117,7 +70,36 @@ export const register = async (req, res) => {
  * "password":"admin123"}
  */
 export const login = async (req, res) => {
-    res.json('login router')
+    const { userName, password } = req.body;
+
+    try {
+        UserModel.findOne({ userName })
+            .then(user => {
+                bcrypt.compare(password, user.password)
+                    .then(passwordCheck => {
+                        if (!passwordCheck) return res.status(400).send({ error: 'Don\'t have password' })
+                        const token = jwt.sign({
+                            userId: user._id,
+                            userName: user.userName,
+
+                        }, ENV.JWT_SECRET, { expiresIn: '24h' })
+                        return res.status(200).send({
+                            msg: 'Login successful',
+                            userName: user.userName,
+                            token
+                        })
+                    })
+                    .catch(error => {
+                        return res.status(400).send({ error: 'password does not match' })
+                    })
+            })
+            .catch(error => {
+                return res.status(404).send({ error: 'userName not found' })
+            })
+
+    } catch (error) {
+        return res.status(500).send({ error });
+    }
 }
 
 /** GET: http://localhost:8080/api/user/example123 */
