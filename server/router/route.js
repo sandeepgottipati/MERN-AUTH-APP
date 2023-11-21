@@ -10,7 +10,7 @@ router.route('/register').post(controller.register);
 //authenticate user
 router.post('/authenticate', (req, res) => res.end())
 //login in app 
-router.post('/login', controller.login)
+router.post('/login', controller.verifyUser, controller.login)
 
 
 

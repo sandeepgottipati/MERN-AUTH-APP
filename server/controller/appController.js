@@ -3,6 +3,23 @@ import UserModel from "../model/User.model.js";
 import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken";
 import ENV from '../config.js'
+
+
+/**MIDDLEWARE FOR VERIFY USER */
+export async function verifyUser(req, res, next) {
+    try {
+        const { userName } = req.method == "GET" ? req.query : req.body;
+        let exist = await UserModel.findOne({ userName });
+        if (!exist) {
+            return res.status(404).send({ error: "can't find User!" });
+
+        }
+        next();
+    } catch (error) {
+        return res.status(404).send({ error: "Authentication Error" })
+    }
+}
+
 /**POST: http://localhost:5174/api/register
  * 
  * @param {
@@ -104,7 +121,24 @@ export const login = async (req, res) => {
 
 /** GET: http://localhost:8080/api/user/example123 */
 export const getUser = async (req, res) => {
-    res.json("get user route")
+    const { username: userName } = req.params;
+
+    try {
+        if (!userName) return res.status(501).send({ error: "Invalid Username" })
+        const user = await UserModel.findOne({ userName }).exec();
+
+        if (!user) {
+            return res.status(404).send({ error: "User not found" });
+        }
+
+        return res.status(200).send(user);
+
+    }
+    catch (error) {
+        return res.status(404).send({ error: "cannot find user data" })
+    }
+
+
 }
 
 /**PUT: http://localhost:8080/api/updateuser 
