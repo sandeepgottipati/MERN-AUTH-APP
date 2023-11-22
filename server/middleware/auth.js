@@ -13,3 +13,11 @@ export default async function Auth(req, res, next) {
         res.status(401).send({ error: "authentication Failed!" })
     }
 }
+
+export function localVariables(req, res, next) {
+    req.app.locals = {
+        OTP: null,
+        resetSession: false
+    }
+    next();
+}
